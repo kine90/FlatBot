@@ -1,11 +1,12 @@
 import logging
-import time
 from modules.Database import ExposeDB
 from modules.Expose import Expose
 from modules.ApplicationGenerator import ApplicationGenerator
 from dotenv import load_dotenv
 from modules.StealthBrowser import StealthBrowser
 from datetime import datetime
+from selenium.webdriver.support.ui import WebDriverWait
+
 
 logger = logging.getLogger(__name__)
 
@@ -16,10 +17,10 @@ class BaseExposeProcessor:
     domain = "BaseDomain"
     ApplicationGenerator = ApplicationGenerator()
 
-    def __init__(self, email, password):
+    def __init__(self, email, password, stealthbrowser):
         self.email = email
         self.password = password
-        self.stealth_chrome = StealthBrowser()
+        self.stealth_chrome: StealthBrowser = stealthbrowser
         
 
     def get_name(self):
@@ -51,11 +52,16 @@ class BaseExposeProcessor:
         for attempt in range(1, max_attempts + 1):
             logger.info(f"Attempt {attempt}...")
             offer_link = self._generate_expose_link(Expose)
+            #self.stealth_chrome.get("about:blank")
+            #self.stealth_chrome.load_cookies(self.name)
             self.stealth_chrome.get(offer_link)
-            self.stealth_chrome.load_cookies(self.name)
-            self.stealth_chrome.random_wait()
-            self.stealth_chrome.random_scroll()
-            self.stealth_chrome.random_wait()
+            # Explicit wait for the title to not be empty
+            WebDriverWait(self.stealth_chrome, 10).until(
+                lambda d: d.title.strip() != ""
+            )
+            #StealthBrowser.random_wait()
+            #self.stealth_chrome.random_scroll()
+            #StealthBrowser.random_wait()
 
             Expose, success = self._handle_page(Expose)
             if Expose.processed == True:
@@ -65,9 +71,8 @@ class BaseExposeProcessor:
                 logger.info(f"Attempt {attempt} failed.")
             if attempt < max_attempts:
                 logger.info("Retrying...\n")
-                self.stealth_chrome.random_wait(5,20)
+                StealthBrowser.random_wait(5,20)
             else:
                 logger.warning(f"All attempts failed.")
                 Expose.failures += 1
-                self.stealth_chrome.kill()
                 return Expose, False

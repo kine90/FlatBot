@@ -1,15 +1,17 @@
-
 import os
 import base64
 import re
 import logging
+from datetime import datetime
 from modules.Expose import Expose
 from modules.BaseExposeProcessor import BaseExposeProcessor
 from modules.StealthBrowser import StealthBrowser
+from modules.captcha.captcha_tester import CaptchaTester
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
+
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
@@ -18,14 +20,14 @@ class Immobilienscout24_processor(BaseExposeProcessor):
     name = "Immobilienscout24"
     domain = "immobilienscout24.de"
 
-    def __init__(self):
+    def __init__(self, stealthbrowser):
    
         # Load environment variables
         load_dotenv()
         IMMO_EMAIL = base64.b64decode(os.getenv("IMMO_EMAIL")).decode("utf-8")
         IMMO_PASSWORD = base64.b64decode(os.getenv("IMMO_PASSWORD")).decode("utf-8")
 
-        super().__init__(IMMO_EMAIL, IMMO_PASSWORD)
+        super().__init__(IMMO_EMAIL, IMMO_PASSWORD, stealthbrowser)
 
         self.immo_page_titles = {
             "captcha_wall": "Ich bin kein Roboter",
@@ -64,10 +66,10 @@ class Immobilienscout24_processor(BaseExposeProcessor):
     def _handle_page(self, Expose):
         page_title = self.stealth_chrome.title
         logger.info(f"Page title: {page_title}")
-        
+        self._accept_cookies()
         if self.immo_page_titles['captcha_wall'] in page_title:
             self._handle_captcha()
-            return Expose, False
+            #return Expose, False
         elif self.immo_page_titles['offer_expired'] in page_title or self.immo_page_titles['offer_deactivated'] in page_title:
             logger.info("Offer expired or deactivated, skipping.")
             Expose.processed = True
@@ -121,8 +123,13 @@ class Immobilienscout24_processor(BaseExposeProcessor):
             if login_link and "Anmelden" in login_link.text:
                 logger.info("User not logged in. Attempting login.")
                 login_link.click()
+                StealthBrowser.random_wait()
                 try:
-                    self.stealth_chrome.random_wait()
+                    self._handle_captcha()
+                except:
+                    pass
+                try:
+                    StealthBrowser.random_wait()
                     email_field = WebDriverWait(self.stealth_chrome, 10).until(
                         EC.presence_of_element_located((By.ID, "username"))
                     )
@@ -138,7 +145,11 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                     submit_button.click()
                     logger.info("Email submission successful, waiting for password field.")
 
-                    self.stealth_chrome.random_wait()
+                    StealthBrowser.random_wait()
+                    try:
+                        self._handle_captcha()
+                    except:
+                        pass
                     password_field = WebDriverWait(self.stealth_chrome, 10).until(
                         EC.presence_of_element_located((By.ID, "password"))
                     )
@@ -160,11 +171,11 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                     self.stealth_chrome.dismiss_overlays()
                     login_button.click()
                     logger.info("Login submitted successfully.")
-                    self.stealth_chrome.random_wait(5,10)
+                    StealthBrowser.random_wait(5,10)
 
                     ## TO-DO validate success
 
-                    self.stealth_chrome.save_cookies(self.name)
+                    #self.stealth_chrome.save_cookies(self.name)
                     #self.stealth_chrome.refresh()
                     logger.info("Page reloaded after login.")
                     return True
@@ -182,31 +193,38 @@ class Immobilienscout24_processor(BaseExposeProcessor):
 
     def _scrape_expose(self, Expose):
         # Check title
-        try:
-            offer_title = self.stealth_chrome.safe_find_element(By.ID, "expose-title")
+        logger.info(f"Fetched scraped_at from DB: {Expose.scraped_at}, Type: {type(Expose.scraped_at)}")
+        if Expose.scraped_at is None:
+            logger.info(f"Scraping Expose {Expose.expose_id}")
+            try:
+                offer_title = self.stealth_chrome.safe_find_element(By.ID, "expose-title")
 
-            if offer_title != "Unknown":
-                logger.info("Found Offer title, scriping the rest.")
-                Expose.location = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "zip-region-and-country")
-                Expose.agent_name = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "truncateChild_5TDve")
-                Expose.real_estate_agency = self.stealth_chrome.safe_find_element(By.CSS_SELECTOR, "p[data-qa='company-name']")
-                Expose.price_kalt = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "is24-preis-value")
-                Expose.square_meters = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "is24qa-wohnflaeche-main")
-                Expose.number_of_rooms = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "is24qa-zi-main")
-                Expose.nebekosten = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "is24qa-nebenkosten")
-                Expose.price_warm = self.stealth_chrome.safe_find_element(By.CSS_SELECTOR, "dd.is24qa-gesamtmiete")
-                Expose.construction_year = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "is24qa-baujahr")
-                Expose.description = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "is24qa-objektbeschreibung")
-                Expose.neighborhood = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "is24qa-lage")
-                
-                logger.info(f"Expose {Expose.expose_id} scraped to database.")
-                self.stealth_chrome.perform_random_action()
-                return Expose, True
-            
-        except Exception:
-            logger.warning("Not valid offer title found, bad attempt!")
-            return Expose, False
-        
+                if offer_title != "Unknown":
+                    logger.info("Found Offer title, scriping the rest.")
+                    logger.info(f"Scrape time: {datetime.utcnow()}")
+                    Expose.location = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "zip-region-and-country")
+                    Expose.agent_name = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "truncateChild_5TDve")
+                    Expose.real_estate_agency = self.stealth_chrome.safe_find_element(By.CSS_SELECTOR, "p[data-qa='company-name']")
+                    Expose.price_kalt = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "is24-preis-value")
+                    Expose.square_meters = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "is24qa-wohnflaeche-main")
+                    Expose.number_of_rooms = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "is24qa-zi-main")
+                    Expose.nebekosten = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "is24qa-nebenkosten")
+                    Expose.price_warm = self.stealth_chrome.safe_find_element(By.CSS_SELECTOR, "dd.is24qa-gesamtmiete")
+                    Expose.construction_year = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "is24qa-baujahr")
+                    Expose.description = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "is24qa-objektbeschreibung")
+                    Expose.neighborhood = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "is24qa-lage")
+                    Expose.scraped_at = datetime.utcnow()
+                    logger.info(f"Expose {Expose.expose_id} scraped to database.")
+                    self.stealth_chrome.perform_random_action()
+                    return Expose, True
+                else:
+                    logger.warning("No valid offer title found!")
+            except Exception:
+                logger.warning("Scrape failed, bad attempt!")
+                return Expose, False
+        else:
+            logger.info(f"Expose {Expose.expose_id} already scraped")
+            return Expose, True
 
     def _apply_for_offer(self, Expose):
         logger.info("Trying application...")
@@ -236,7 +254,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
             return Expose, True
 
         try:
-            self.stealth_chrome.random_wait()
+            StealthBrowser.random_wait()
             message_label = WebDriverWait(self.stealth_chrome, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "label[for='message']"))
             )
@@ -269,6 +287,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
             # moved in process_expose
             #database.mark_expose_as_processed(expose_id)
             logger.info(f"Expose {Expose.expose_id} applied succesfully.")
+            Expose.applied_at = datetime.utcnow()
             Expose.processed = True
             # TO-DO Notify user?
             return Expose, True
@@ -278,8 +297,40 @@ class Immobilienscout24_processor(BaseExposeProcessor):
             return Expose, False
 
     def _fill_application_form(self, Expose):
+        """
+        Example improved method to handle form fields that appear dynamically 
+        as you scroll or interact with the page.
+        """
+
         self.stealth_chrome.dismiss_overlays()
 
+        # 1) Scroll in increments until no more new content
+        self._scroll_in_increments()
+
+        # 2) Wait for a known element to confirm the form is loaded
+        try:
+            WebDriverWait(self.stealth_chrome, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "label[for='message']"))
+            )
+        except Exception as e:
+            logger.warning(f"Application form not fully loaded (or timed out): {e}")
+            return
+
+        # 3) Get (visible) form fields
+        visible_fields = self._get_all_visible_form_fields()
+
+        # Print them once for debugging (optional)
+        for f in visible_fields:
+            field_name = f.get_attribute("name")
+            field_type_attr = f.get_attribute("type")
+            if f.tag_name.lower() == "select":
+                field_type = "select"
+            else:
+                field_type = field_type_attr.lower() if field_type_attr else f.tag_name.lower()
+            logger.info(f"Found field: name={field_name}, type={field_type}")
+
+        # 4) Fill fields
+        # Use the same "form_values" list from your code
         form_values = [
             ("vonplz", "text", os.getenv("APPLICANT_POST_CODE")),
             ("nachplz", "text", ""),
@@ -324,42 +375,9 @@ class Immobilienscout24_processor(BaseExposeProcessor):
             ("insolvencyProcess", "select", os.getenv("APPLICANT_INSOLVENCY_PROCESS")),
         ]
 
-        # Scroll and dynamically load all form fields
-        self.stealth_chrome.scroll_to_bottom()
-        fields = self.stealth_chrome.find_elements(By.TAG_NAME, "input") + \
-                self.stealth_chrome.find_elements(By.TAG_NAME, "textarea") + \
-                self.stealth_chrome.find_elements(By.TAG_NAME, "select")
-
-        # Ignore hidden fields
-        visible_fields = []
-        for field in fields:
-            field_type_attr = field.get_attribute("type")
-            # Determine field_type properly
-            if field.tag_name.lower() == "select":
-                field_type = "select"
-            else:
-                field_type = field_type_attr.lower() if field_type_attr else field.tag_name.lower()
-
-            # Skip hidden fields
-            if field_type == "hidden":
-                continue
-
-            visible_fields.append(field)
-
-        # Print all found (visible) fields once
         for field in visible_fields:
             field_name = field.get_attribute("name")
-            if field.tag_name.lower() == "select":
-                # For selects, we've standardized the type as "select"
-                field_type = "select"
-            else:
-                field_type_attr = field.get_attribute("type")
-                field_type = field_type_attr.lower() if field_type_attr else field.tag_name.lower()
-            logging.info(f"Found field: name={field_name}, type={field_type}")
-
-        # Iterate through fields and match with provided values
-        for field in visible_fields:
-            field_name = field.get_attribute("name")
+            # Determine actual field type
             if field.tag_name.lower() == "select":
                 field_type = "select"
             else:
@@ -367,40 +385,74 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                 field_type = field_type_attr.lower() if field_type_attr else field.tag_name.lower()
 
             for name, expected_type, value in form_values:
+                # Match field name and type
                 if field_name == name and field_type == expected_type:
-                    try:                        
-                        # Simulate human-like mouse movements
+                    try:
+                        # Scroll this element into view before interacting
+                        self.stealth_chrome.execute_script("arguments[0].scrollIntoView({block: 'center'});", field)
+                        StealthBrowser.random_wait(0.5, 1)  # give time to settle
                         self.stealth_chrome.random_mouse_movements(field)
 
-                        # Fill the field based on its type
-                        if field_type in ["text", "email", "tel", "number"] or field.tag_name == "textarea":
+                        if field_type in ["text", "email", "tel", "number"] or field.tag_name.lower() == "textarea":
                             field.clear()
                             self.stealth_chrome.send_keys_human_like(field, value)
-                            self.stealth_chrome.random_wait()
+                            StealthBrowser.random_wait()
+
                         elif field_type == "select":
                             Select(field).select_by_visible_text(value)
-                            self.stealth_chrome.random_wait()
+                            StealthBrowser.random_wait()
+
                         elif field_type == "checkbox":
                             current_state = field.is_selected()
                             if value.lower() in ["true", "yes", "1"] and not current_state:
                                 field.click()
                             elif value.lower() in ["false", "no", "0"] and current_state:
                                 field.click()
-                            self.stealth_chrome.random_wait()
+                            StealthBrowser.random_wait(1,3)
+
                     except Exception as e:
-                        logging.info(f"Could not fill field '{field_name}': {e}")
+                        logger.warning(f"Could not fill field '{field_name}' (type={field_type}): {e}")
 
-        # Recheck for dynamically loaded fields (but do not print them again)
-        self.stealth_chrome.scroll_to_bottom()
-        additional_fields = self.stealth_chrome.find_elements(By.TAG_NAME, "input") + \
-                            self.stealth_chrome.find_elements(By.TAG_NAME, "textarea") + \
-                            self.stealth_chrome.find_elements(By.TAG_NAME, "select")
+        # 5) (Optional) Re-check or re-scroll if new fields appear after the first pass
+        self._scroll_in_increments()
+        # If you know new fields appear only after certain fields are filled, 
+        # you could re-collect and fill again here.
 
-        # No printing here to ensure fields are printed only once
-        for field in additional_fields:
-            pass  # Just pass without logging
+        logger.info("Form filling completed.")
 
-        logging.info("Form filling completed.")
+
+    def _scroll_in_increments(self):
+        """
+        Scroll the page in increments to ensure all dynamic content is fully loaded.
+        """
+        last_height = self.stealth_chrome.execute_script("return document.body.scrollHeight")
+        while True:
+            self.stealth_chrome.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            StealthBrowser.random_wait(2, 4)  # Adjust wait as needed
+            new_height = self.stealth_chrome.execute_script("return document.body.scrollHeight")
+            if new_height == last_height:
+                break
+            last_height = new_height
+
+
+    def _get_all_visible_form_fields(self):
+        """
+        Return a list of only the visible input, textarea, and select fields.
+        Hidden fields are skipped.
+        """
+        all_inputs = self.stealth_chrome.find_elements(By.TAG_NAME, "input")
+        all_textareas = self.stealth_chrome.find_elements(By.TAG_NAME, "textarea")
+        all_selects = self.stealth_chrome.find_elements(By.TAG_NAME, "select")
+        
+        all_fields = all_inputs + all_textareas + all_selects
+        
+        visible_fields = []
+        for field in all_fields:
+            # skip hidden or invisible
+            if field.is_displayed() and field.get_attribute("type") != "hidden":
+                visible_fields.append(field)
+        
+        return visible_fields
 
     def _accept_cookies(self):
         try:
@@ -414,6 +466,48 @@ class Immobilienscout24_processor(BaseExposeProcessor):
 
     def _handle_captcha(self):
         logger.warning("Captcha detected.")
-        #self.stealth_chrome.dismiss_overlays()
-        self.stealth_chrome.random_wait(1,3)
-        self.stealth_chrome.wait_for_user()
+        attempts = 0
+        max_attempts = 3
+        while attempts < max_attempts:
+            try:
+                logger.info("Loading solver")
+                tester = CaptchaTester()
+                captcha_type = tester.detect_captcha(self.stealth_chrome)
+                
+                if not captcha_type:
+                    logger.info("No CAPTCHA detected.")
+                    return True  # No captcha => success
+
+                logger.info(f"Detected CAPTCHA type: {captcha_type}")
+                captcha_data = tester.get_captcha_data(captcha_type, self.stealth_chrome)
+                solution = tester.solve_captcha(
+                    captcha_type,
+                    captcha_data,
+                    self.stealth_chrome,
+                    self.stealth_chrome.current_url
+                )
+
+                if captcha_type == "geetest":
+                    extra_data = captcha_data.get("data")
+                    tester.inject_solution(captcha_type, self.stealth_chrome, solution, extra_data)
+                else:
+                    tester.inject_solution(captcha_type, self.stealth_chrome, solution)
+
+                if tester.validate_solution(captcha_type, self.stealth_chrome):
+                    logger.info("CAPTCHA solved successfully.")
+                    return True
+                else:
+                    logger.error("Failed to solve CAPTCHA, retrying...")
+                    self.stealth_chrome.refresh()
+                    attempts += 1
+
+            except Exception as e:
+                logger.error(f"Error while solving CAPTCHA: {e}", exc_info=True)
+                self.stealth_chrome.refresh()
+                attempts += 1
+
+        logger.error("All attempts to solve CAPTCHA failed.")
+        return False
+
+        StealthBrowser.random_wait(1,3)
+

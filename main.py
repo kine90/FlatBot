@@ -1,11 +1,12 @@
 import os
 import time
 from datetime import datetime
-import random
 import importlib
 import logging
 from modules.Database import ExposeDB, Expose
 from modules.EmailFetcher import EmailFetcher
+from modules.StealthBrowser import StealthBrowser
+
 
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,7 @@ def main():
         logger.info("Starting processor...")
         exposes = db_instance.get_unprocessed_exposes()
         if  exposes:
+            stealth_chrome = StealthBrowser()
             for expose in exposes:
                 try:
                     processor_module = importlib.import_module(f"modules.{expose.source}_processor")
@@ -52,10 +54,10 @@ def main():
                     if not processor_class:
                         logger.error(f"Processor class for {expose.source} not found")
                         continue
-                    processor_instance = processor_class()
+                    processor_instance = processor_class(stealth_chrome)
                     expose, success = processor_instance.process_expose(expose)
+                    db_instance.update_expose(expose)
                     if success:
-                        db_instance.update_expose(expose)
                         logger.warning("Expose processed and updated")
                 except ModuleNotFoundError:
                     logger.error(f"Processor module for {expose.source} not found")
@@ -64,14 +66,10 @@ def main():
                 except Exception as e:
                     logger.error(f"Error processing expose from {expose.source}: {e}")
             logger.warning("All new exposes processed.")
+            stealth_chrome.kill()
         else:
             logger.warning("No unprocessed exposes found.")
-        random_wait(600, 1200)
-
-def random_wait(min_seconds=2, max_seconds=5):
-    wait_time = random.uniform(min_seconds, max_seconds)
-    logger.info(f"Waiting for {wait_time:.2f} seconds...")
-    time.sleep(wait_time)
+        StealthBrowser.random_wait(200, 400)
 
 ############################################################
 if __name__ == "__main__":

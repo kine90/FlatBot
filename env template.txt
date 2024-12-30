@@ -1,0 +1,61 @@
+# SYSTEM CONFIG
+COOKIES_DIR=cookies
+DB_FILE =flats.db
+MAX_ATTEMPTS_EXPOSE=50
+
+# MAILBOX RECEIVIG EMAIL NOTIFICATIONS (SMTP)
+EMAIL_USER = "your mailbox address"
+EMAIL_PASSWORD = "your mailbox POP3 password"
+EMAIL_SERVER = "your mailbox pop3 server"
+EMAIL_PORT = 995
+EMAIL_DELETE = True #should the script delete processed emails or leave them in the server?
+
+#2CAPTCHA SERVICE
+2CAPTCHA_API_KEY="your 2captcha API key"
+
+# APPLICANT PROFILE (Fill as visible choices, use Inspect in chrome to copy the right values)
+APPLICANT_SALUTATION = "Herr"
+APPLICANT_NAME = "Name"
+APPLICANT_SURNAME = "Surname"
+APPLICANT_BIRTHDATE = "dd.mm.yyyy"
+APPLICANT_STREET = "your current street"
+APPLICANT_HOUSE_NUM = "XX"
+APPLICANT_POST_CODE = "XXXXX"
+APPLICANT_CITY = "your current city"
+APPLICANT_PHONE = "XXXXXXXXXXXXXX"
+APPLICANT_EMAIL = "your email"
+APPLICANT_NEIGHBORHOOD = "your kiez"
+APPLICANT_JOB_STATUS = "unbefristet angestellt"
+APPLICANT_JOB = "your job"
+APPLICANT_COMPANY = "your employer"
+APPLICANT_NET_INCOME_M = "XXX€"
+APPLICANT_SEX = "Männlich"
+APPLICANT_HOUSEHOLD_SIZE = "X"
+APPLICANT_PETS = "Keine"
+APPLICANT_SMOKE = "Nein"
+APPLICANT_MARRIED = "Nein"
+# IMMOSCOUT FORM VALUES
+APPLICANT_MOVEIN_DATE_TYPE = "as options from select field"
+APPLICANT_NUM_PERSONS = "as options from select field"
+APPLICANT_EMPLOYEMENT_RELATIONSHIP = "as options in select field"
+APPLICANT_EMPLOYEMENT_STATUS = "as options in select filed"
+APPLICANT_INCOME_RANGE = "range option from select field"
+APPLICANT_INCOME_AMMOUNT = "X.XXX" #income in numbers, without currency symbol
+APPLICANT_DOCUMENTS_AVAILABLE = "Vorhanden"
+APPLICANT_HAS_PETS = "Nein"
+APPLICANT_SEND_PROFILE = "true"
+APPLICANT_NUM_ADULTS = "X"
+APPLICANT_NUM_KIDS = "X"
+APPLICANT_RENT_ARREARS = "Nein"
+APPLICANT_INSOLVENCY_PROCESS = "Nein"
+
+##IMMOBILIENSCOUT CRED
+IMMO_EMAIL = "your immoscout email in base64"
+IMMO_PASSWORD = "your immoscout password in base64"
+IMMO_PREMIUM = "Yes"
+IMMO_DOCUMENTS_AVAILABLE = "Yes"
+
+
+# GENERIC APPLICATION TEXT
+TEMPLATE_FILENAME = "ApplicationTemplate.txt"
+FALLBACK_TEXT = "Write here a fall back text in case the automatic generation fails (it never does...)"

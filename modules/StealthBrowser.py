@@ -13,7 +13,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException
+from selenium_stealth import stealth
 
 from dotenv import load_dotenv
 
@@ -46,10 +48,17 @@ class StealthBrowser(webdriver.Chrome):
         options.add_argument("--disable-web-security")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-extensions")
-        #ptions.add_argument(f'--user-data-dir={self.cookies_dir}')
+        options.add_argument("--remote-debugging-port=9222")
+        options.add_argument(r"--user-data-dir=C:\Users\flatmaster\AppData\Local\Google\Chrome for Testing\User Data\Default")
+
+        # Enable performance logging
+        #capabilities = DesiredCapabilities.CHROME
+        #capabilities["goog:loggingPrefs"] = {"performance": "ALL"}
+        # Combine options with capabilities
+        #options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
         options.add_argument(
             "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
         )
 
         # Use ChromeDriverManager to install and set up the driver service
@@ -57,17 +66,29 @@ class StealthBrowser(webdriver.Chrome):
 
         # Initialize the WebDriver with the specified service and options
         super().__init__(service=driver_service, options=options)
+        stealth ( 
+            self,
+            languages=["en-US", "en"], #["de", "en-US", "en"],
+            vendor="Google Inc.",
+            platform="Win64",
+            webgl_vendor="Intel Inc.",
+            renderer="Intel Iris OpenGL Engine",
+            fix_hairline=True,
+            )
 
+        
         self.maximize_window()
 
     def kill(self):
+        logging.info("Killing browser")
         self.quit()
 
     def wait_for_user(self):
         #self.execute_script("window.stop();")
-        input("Please log in and press Enter to continue...")
+        input("Waiting for user, press Enter to continue...")
 
-    def random_wait(self, min_seconds=2, max_seconds=5):
+    @staticmethod
+    def random_wait(min_seconds=2, max_seconds=5):
         wait_time = random.uniform(min_seconds, max_seconds)
         logging.info(f"Waiting for {wait_time:.2f} seconds...")
         time.sleep(wait_time)
