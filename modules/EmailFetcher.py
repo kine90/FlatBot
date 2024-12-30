@@ -20,7 +20,7 @@ class EmailFetcher:
 
         # Decoded email credentials
         self.email_user = os.getenv("EMAIL_USER")
-        self.email_password = base64.b64decode(os.getenv("EMAIL_PASSWORD")).decode("utf-8")
+        self.email_password = os.getenv("EMAIL_PASSWORD")
         self.pop3_server = os.getenv("EMAIL_SERVER")
         self.pop3_port = int(os.getenv("EMAIL_PORT"))
 

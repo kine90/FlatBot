@@ -24,8 +24,8 @@ class Immobilienscout24_processor(BaseExposeProcessor):
    
         # Load environment variables
         load_dotenv()
-        IMMO_EMAIL = base64.b64decode(os.getenv("IMMO_EMAIL")).decode("utf-8")
-        IMMO_PASSWORD = base64.b64decode(os.getenv("IMMO_PASSWORD")).decode("utf-8")
+        IMMO_EMAIL = os.getenv("IMMO_EMAIL")
+        IMMO_PASSWORD = os.getenv("IMMO_PASSWORD")
 
         super().__init__(IMMO_EMAIL, IMMO_PASSWORD, stealthbrowser)
 
