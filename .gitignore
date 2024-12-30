@@ -11,3 +11,5 @@ cookies/
 SikuliX/
 Chrome installers
 logs/
+_bkp/
+.vscode
