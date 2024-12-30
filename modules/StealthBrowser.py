@@ -117,7 +117,7 @@ class StealthBrowser(webdriver.Chrome):
     def perform_random_action(self):
         actions = [
             self.random_scroll,
-            lambda: self.random_wait(42, 15),
+            lambda: self.random_wait(2, 8),
         ]
         action = random.choice(actions)
         action()
