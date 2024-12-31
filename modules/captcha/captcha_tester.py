@@ -243,7 +243,8 @@ class CaptchaTester:
         except:
             logger.info("Captcha solved")
             return True
-
+        
+'''
     def solve_captcha_on_page(self, driver) -> bool:
         """
         Detects and solves the captcha on the current page.
@@ -277,4 +278,4 @@ class CaptchaTester:
             return True
         else:
             return False
-
+'''

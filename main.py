@@ -55,10 +55,8 @@ def main():
                         logger.error(f"Processor class for {expose.source} not found")
                         continue
                     processor_instance = processor_class(stealth_chrome)
-                    expose, success = processor_instance.process_expose(expose)
+                    processor_instance.process_expose(expose)
                     db_instance.update_expose(expose)
-                    if success:
-                        logger.warning("Expose processed and updated")
                 except ModuleNotFoundError:
                     logger.error(f"Processor module for {expose.source} not found")
                 except AttributeError as e:
@@ -69,7 +67,7 @@ def main():
             stealth_chrome.kill()
         else:
             logger.warning("No unprocessed exposes found.")
-        StealthBrowser.random_wait(200, 400)
+        StealthBrowser.random_wait(100, 300)
 
 ############################################################
 if __name__ == "__main__":
