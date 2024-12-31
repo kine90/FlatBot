@@ -10,6 +10,8 @@ Page title login: Welcome - ImmobilienScout24
 Page title: Fehler - ImmobilienScout24 - ImmobilienScout24
 Page title: ImmoScout24 – Die Nr. 1 für Immobilien
 2024-12-16 22:26:45,794 - INFO - Page title: Dein persönlicher Bereich bei ImmobilienScout24
+https://push.search.is24.de/email/expose/156335513?PID=142559089&savedSearchId=135826985&immoTypeId=0&utm_medium=email&utm_source=system&utm_campaign=fulfillment_update&utm_content=expose_link&referrer=ff_listing
+https://push.search.is24.de/email/expose/156289852?PID=142559089&savedSearchId=135826982&immoTypeId=0&utm_medium=email&utm_source=system&utm_campaign=fulfillment_update&utm_content=expose_link&referrer=ff_listing
 
 Chromium logo
 Google LLC

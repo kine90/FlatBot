@@ -6,7 +6,7 @@ from datetime import datetime
 from modules.Expose import Expose
 from modules.BaseExposeProcessor import BaseExposeProcessor
 from modules.StealthBrowser import StealthBrowser
-from modules.captcha.Immo_captcha_tester import CaptchaTester
+from modules.captcha.Immo_captcha_tester import ImmoCaptchaTester
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -479,7 +479,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
             attempts += 1
             try:
                 logger.debug("Loading solver")
-                tester = CaptchaTester()
+                tester = ImmoCaptchaTester()
                 captcha_type = tester.detect_captcha(self.stealth_chrome)
                 
                 if not captcha_type:
