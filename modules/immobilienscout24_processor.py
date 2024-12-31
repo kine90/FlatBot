@@ -58,7 +58,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
     # Takes an exposeID and returns the link to the page as sent in an email
     @staticmethod
     def _generate_expose_link(Expose):
-        offer_link = f"https://push.search.is24.de/email/expose/{Expose.expose_id}&immoTypeId=0&utm_medium=email&utm_source=system&utm_campaign=fulfillment_update&utm_content=expose_link&referrer=ff_listing"
+        offer_link = f"https://push.search.is24.de/email/expose/{Expose.expose_id}"
         return offer_link
 
     #updates expose, called in process_expose
