@@ -57,6 +57,7 @@ def main():
                     processor_instance = processor_class(stealth_chrome)
                     processor_instance.process_expose(expose)
                     db_instance.update_expose(expose)
+                    StealthBrowser.random_wait()
                 except ModuleNotFoundError:
                     logger.error(f"Processor module for {expose.source} not found")
                 except AttributeError as e:
