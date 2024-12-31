@@ -6,7 +6,7 @@ from datetime import datetime
 from modules.Expose import Expose
 from modules.BaseExposeProcessor import BaseExposeProcessor
 from modules.StealthBrowser import StealthBrowser
-from modules.captcha.captcha_tester import CaptchaTester
+from modules.captcha.Immo_captcha_tester import CaptchaTester
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC

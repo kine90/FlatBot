@@ -1,11 +1,10 @@
 import os
 import re
-import io
+from io import BytesIO
 import base64
 import logging
 from time import sleep
 from dotenv import load_dotenv
-
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -13,12 +12,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
-from io import BytesIO
 from modules.captcha.twocaptcha_solver import TwoCaptchaSolver
 
 logger = logging.getLogger(__name__)
 
-class CaptchaTester:
+class ImmoCaptchaTester:
     """
     Handles detection and solving of various Captcha types:
     - GeeTest
