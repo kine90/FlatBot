@@ -19,6 +19,16 @@ logger = logging.getLogger(__name__)
 class Immobilienscout24_processor(BaseExposeProcessor):
     name = "Immobilienscout24"
     domain = "immobilienscout24.de"
+    # Offers email subject filter
+    subject_filter = {"angebot", "offer"}
+    page_titles = {
+            "captcha_wall": "Ich bin kein Roboter",
+            "offer_expired": "Angebot nicht gefunden",
+            "offer_deactivated": "Angebot wurde deaktiviert",
+            "login_page": "Welcome - ImmobilienScout24",
+            "error_page": "Fehler",
+            "home_page": "ImmoScout24 – Die Nr. 1 für Immobilien"
+        }
 
     def __init__(self, stealthbrowser):
    
@@ -29,24 +39,12 @@ class Immobilienscout24_processor(BaseExposeProcessor):
 
         super().__init__(IMMO_EMAIL, IMMO_PASSWORD, stealthbrowser)
 
-        self.immo_page_titles = {
-            "captcha_wall": "Ich bin kein Roboter",
-            "offer_expired": "Angebot nicht gefunden",
-            "offer_deactivated": "Angebot wurde deaktiviert",
-            "login_page": "Welcome - ImmobilienScout24",
-            "error_page": "Fehler",
-            "home_page": "ImmoScout24 – Die Nr. 1 für Immobilien"
-        }
-
     @staticmethod
     def extract_expose_link(subject, email_body):
         #Extract unique expose links from the email body specific to Immobilienscout24#
 
-    	# Filter Keywords
-        subject_keywords = {"angebot", "offer"}
-
         # Normalize keywords to lowercase for consistent matching
-        subject_keywords = {keyword.lower() for keyword in subject_keywords}
+        subject_keywords = {keyword.lower() for keyword in Immobilienscout24_processor.subject_filter}
 
         # Check subject filter before processing
         subject_lower = subject.lower()
@@ -67,18 +65,18 @@ class Immobilienscout24_processor(BaseExposeProcessor):
         page_title = self.stealth_chrome.title
         logger.info(f"Page title: {page_title}")
         self._accept_cookies()
-        if self.immo_page_titles['captcha_wall'] in page_title:
+        if Immobilienscout24_processor.page_titles['captcha_wall'] in page_title:
             self._handle_captcha()
             #return Expose, False
-        elif self.immo_page_titles['offer_expired'] in page_title or self.immo_page_titles['offer_deactivated'] in page_title:
+        elif Immobilienscout24_processor.page_titles['offer_expired'] in page_title or Immobilienscout24_processor.page_titles['offer_deactivated'] in page_title:
             logger.info("Offer expired or deactivated, skipping.")
             Expose.processed = True
             logger.info(f"Expose {Expose.expose_id} marked as processed.")
             return Expose, False
-        elif self.immo_page_titles['login_page'] in page_title:
+        elif Immobilienscout24_processor.page_titles['login_page'] in page_title:
             logger.warning("Login page detected, attempting login.")
             self._perform_login()
-        elif self.immo_page_titles['error_page'] in page_title or self.immo_page_titles['home_page'] in page_title:
+        elif Immobilienscout24_processor.page_titles['error_page'] in page_title or Immobilienscout24_processor.page_titles['home_page'] in page_title:
             logger.warning("Error or landed on home page, skipping.")
             return Expose, False
         self.stealth_chrome.perform_random_action()

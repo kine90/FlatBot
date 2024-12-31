@@ -1,17 +1,20 @@
 import os
-import poplib
+import imaplib
 import base64
 import re
 import importlib
 import logging
 from email import parser
 from email.message import EmailMessage
+
 from dotenv import load_dotenv
+
 from modules.Database import ExposeDB
 from modules.Expose import Expose
 from modules.BaseExposeProcessor import BaseExposeProcessor
 
 logger = logging.getLogger(__name__)
+
 
 class EmailFetcher:
     def __init__(self, db=None):
@@ -21,17 +24,16 @@ class EmailFetcher:
         # Decoded email credentials
         self.email_user = os.getenv("EMAIL_USER")
         self.email_password = os.getenv("EMAIL_PASSWORD")
-        self.pop3_server = os.getenv("EMAIL_SERVER")
-        self.pop3_port = int(os.getenv("EMAIL_PORT"))
-
-        # Control Features
-        self.delete_emails_after_processing = os.getenv("EMAIL_DELETE", "False").lower() == "true"
-
+        #IMAP settings
+        self.imap_server = os.getenv("EMAIL_SERVER_IMAP")
+        self.imap_port = int(os.getenv("EMAIL_IMAP_PORT"))
+        self.mark_read = os.getenv("EMAIL_MARK_READ", "False").lower() == "true"
+        self.delete_from_server = os.getenv("EMAIL_DELETE", "False").lower() == "true"
         # Load processors dynamically
         self.processors = self.load_processors()
-   
+
     def load_processors(self):
-        logging.info("Emailfetcher loading processors...")
+        logging.info("EmailFetcher: loading processors...")
         processors = {}
         modules_dir = "modules"
         for module_name in os.listdir(modules_dir):
@@ -55,7 +57,7 @@ class EmailFetcher:
                 logging.info("Imported " + module_name)
         return processors
 
-    def get_email_body(self, email_message: EmailMessage):
+    def get_email_body(self, email_message: EmailMessage) -> str:
         """Extract the body of the email in plain text."""
         if email_message.is_multipart():
             for part in email_message.walk():
@@ -65,57 +67,99 @@ class EmailFetcher:
                     return part.get_payload(decode=True).decode("utf-8", errors="ignore")
         else:
             return email_message.get_payload(decode=True).decode("utf-8", errors="ignore")
-        return None
+        return ""
 
     def fetch_emails(self):
-        logging.info("Fetching emails...")
+        """
+        Fetch unread emails via IMAP, parse them, and mark them as read.
+        Returns the number of new exposes that were inserted into the database.
+        """
+        logging.info("Fetching emails via IMAP...")
         new_exposes = 0
-        logging.info(f"Connecting to {self.pop3_server}:{self.pop3_port} with user {self.email_user}")
+
         try:
-            mailbox = poplib.POP3_SSL(self.pop3_server, self.pop3_port)
-            mailbox.user(self.email_user)
-            mailbox.pass_(self.email_password)
+            # Connect to the IMAP server
+            logging.info(f"Connecting to IMAP {self.imap_server}:{self.imap_port} as {self.email_user}")
+            mailbox = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
+            mailbox.login(self.email_user, self.email_password)
 
-            num_messages = len(mailbox.list()[1])
-            logging.info(f"Found {num_messages} emails.")
+            # Select the INBOX (read/write mode)
+            mailbox.select("INBOX")
 
-            if num_messages > 0:
-                for i in range(num_messages):
-                    raw_email = b"\n".join(mailbox.retr(i+1)[1])
-                    email_message = parser.Parser().parsestr(raw_email.decode("utf-8"))
-                    subject = email_message["Subject"]
-                    sender = email_message["From"]
-                    body = self.get_email_body(email_message)
-                    logger.info("Processing email from " + sender + " Subject: " + subject)
-                    if body:
-                        # Iterate over class-based processors
-                        for domain, processor_class in self.processors.items():
-                            if domain in sender:
-                                # Call the static method directly on the class
-                                expose_ids = processor_class.extract_expose_link(subject, body)
-                                if expose_ids:
-                                    for expose_id in expose_ids:
-                                        if not self.db.expose_exists(expose_id):
-                                            new_expose = Expose(
-                                                expose_id=expose_id, 
-                                                source=processor_class.name
-                                            )
-                                            self.db.insert_expose(new_expose)
-                                            new_exposes += 1
-                                            logging.info(
-                                                f"Inserted expose {expose_id} into the database with source '{processor_class.name}'."
-                                            )
-                                        else:
-                                            logging.info(f"Expose {expose_id} already exists.")
-                                    if self.delete_emails_after_processing:
-                                        mailbox.dele(i+1)
-                                        logging.warning(f"Deleted email with subject: {subject}")
-                                break
-                    else:
-                        logging.warning(f"Email with subject '{subject}' has no readable body.")
+            # Search for unread emails (use "ALL" if you want everything)
+            status, message_ids = mailbox.search(None, "UNSEEN")
+            if status != "OK":
+                logging.error("Could not search for emails.")
+                mailbox.close()
+                mailbox.logout()
+                return new_exposes
 
-            mailbox.quit()
+            # message_ids[0] is a space-separated string of email IDs
+            messages = message_ids[0].split()
+            logging.info(f"Found {len(messages)} unread emails.")
 
+            # Process each email
+            for num in messages:
+                # Retrieve the entire message
+                status, data = mailbox.fetch(num, "(RFC822)")
+                if status != "OK":
+                    logging.warning(f"Failed to fetch email with ID {num}. Skipping...")
+                    continue
+
+                # The raw email content is in data[0][1]
+                raw_email = data[0][1]
+                try:
+                    email_str = raw_email.decode("utf-8")
+                except UnicodeDecodeError:
+                    # If there's a decoding error, fallback
+                    email_str = raw_email.decode("latin-1", errors="ignore")
+
+                email_message = parser.Parser().parsestr(email_str)
+                subject = email_message["Subject"] or ""
+                sender = email_message["From"] or ""
+
+                body = self.get_email_body(email_message)
+                logger.info(f"Processing email from {sender} | Subject: {subject}")
+
+                if not body:
+                    logger.warning(f"Email with subject '{subject}' has no readable body.")
+                else:
+                    # Iterate over processors
+                    for domain, processor_class in self.processors.items():
+                        if domain in sender:
+                            # We have a processor, Extract Expose IDs
+                            expose_ids = processor_class.extract_expose_link(subject, body)
+                            if expose_ids:
+                                # It is an offer, attempt to store exposes
+                                for expose_id in expose_ids:
+                                    if not self.db.expose_exists(expose_id):
+                                        new_expose = Expose(
+                                            expose_id=expose_id,
+                                            source=processor_class.name
+                                        )
+                                        self.db.insert_expose(new_expose)
+                                        new_exposes += 1
+                                        logging.info(
+                                            f"Inserted expose {expose_id} into database (source='{processor_class.name}')."
+                                        )
+                                    else:
+                                        logging.info(f"Expose {expose_id} already exists.")
+                                # Then mark the email as read (add the \\Seen flag)
+                                if self.mark_read:
+                                    mailbox.store(num, "+FLAGS", "\\Seen")
+                                # Or/and delete it
+                                if self.delete_from_server:
+                                    mailbox.store(num, "+FLAGS", "\\Deleted")
+                                    mailbox.expunge()
+                            break  # Found our processor; no need to check others
+
+
+            mailbox.close()
+            mailbox.logout()
+
+        except imaplib.IMAP4.error as e:
+            logging.error(f"IMAP4 error: {str(e)}")
         except Exception as e:
             logging.error(f"Error: {str(e)}")
+
         return new_exposes
