@@ -476,6 +476,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
         attempts = 0
         max_attempts = 3
         while attempts < max_attempts:
+            attempts += 1
             try:
                 logger.debug("Loading solver")
                 tester = CaptchaTester()
@@ -500,18 +501,17 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                 else:
                     tester.inject_solution(captcha_type, self.stealth_chrome, solution)
 
-                if tester.validate_solution(captcha_type, self.stealth_chrome):
+                StealthBrowser.random_wait()
+                if not tester.detect_captcha(self.stealth_chrome):
                     logger.info("CAPTCHA solved successfully.")
                     return True
                 else:
                     logger.error("Failed to solve CAPTCHA, retrying...")
-                    self.stealth_chrome.refresh()
-                    attempts += 1
+                    #self.stealth_chrome.refresh()
 
             except Exception as e:
                 logger.error(f"Error while solving CAPTCHA: {e}", exc_info=True)
-                self.stealth_chrome.refresh()
-                attempts += 1
+                #self.stealth_chrome.refresh()
 
         logger.error("All attempts to solve CAPTCHA failed.")
         return False
