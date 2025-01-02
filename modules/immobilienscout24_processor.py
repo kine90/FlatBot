@@ -6,7 +6,7 @@ from datetime import datetime
 from modules.Expose import Expose
 from modules.BaseExposeProcessor import BaseExposeProcessor
 from modules.StealthBrowser import StealthBrowser
-from modules.captcha.Immo_captcha_tester import ImmoCaptchaTester
+from modules.captcha.Immo_captchas_handler import ImmoCaptchaHandler
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -67,7 +67,8 @@ class Immobilienscout24_processor(BaseExposeProcessor):
         logger.info(f"Page title: {page_title}")
         self._accept_cookies()
         if Immobilienscout24_processor.page_titles['captcha_wall'] in page_title:
-            self._solve_captcha()
+            captcha_handler = ImmoCaptchaHandler()
+            captcha_handler.handle_captchas(self.stealth_chrome)
         elif Immobilienscout24_processor.page_titles['offer_expired'] in page_title or Immobilienscout24_processor.page_titles['offer_deactivated'] in page_title:
             logger.info("Offer expired or deactivated, skipping.")
             Expose.processed = True
@@ -127,12 +128,11 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                 logger.info("User not logged in. Attempting login.")
                 login_link.click()
                 StealthBrowser.random_wait()
-                try:
-                    # sometimes we get a captcha
-                    self._solve_captcha()
-                except:
-                    pass
-                # At this point we should be good to go
+
+                # sometimes we get a captcha
+                captcha_handler = ImmoCaptchaHandler()
+                captcha_handler.handle_captchas(self.stealth_chrome)
+
                 try:
                     email_field = WebDriverWait(self.stealth_chrome, 10).until(
                         EC.presence_of_element_located((By.ID, "username"))
@@ -149,10 +149,10 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                     logger.info("Email submission successful, waiting for password field.")
 
                     StealthBrowser.random_wait()
-                    try:
-                        self._solve_captcha()
-                    except:
-                        pass
+
+                    # sometimes we get a captcha
+                    captcha_handler = ImmoCaptchaHandler()
+                    captcha_handler.handle_captchas(self.stealth_chrome)
 
                     password_field = WebDriverWait(self.stealth_chrome, 10).until(
                         EC.presence_of_element_located((By.ID, "password"))
@@ -301,7 +301,11 @@ class Immobilienscout24_processor(BaseExposeProcessor):
         except:
             logger.info("Submit not fount!")
             return False
-
+        
+        # sometimes we get a captcha
+        captcha_handler = ImmoCaptchaHandler()
+        captcha_handler.handle_captchas(self.stealth_chrome)
+            
         # Validating submission
         try:
             confirmation_message = WebDriverWait(self.stealth_chrome, 10).until(
@@ -471,41 +475,5 @@ class Immobilienscout24_processor(BaseExposeProcessor):
         return
 
 
-    def _solve_captcha(self):
-        logger.debug("Trying to solve captcha")
-        attempts = 0
-        max_attempts = 3
-        while attempts < max_attempts:
-            attempts += 1
-            try:
-                tester = ImmoCaptchaTester()
-                captcha_type = tester.detect_captcha(self.stealth_chrome)
-                
-                if not captcha_type:
-                    logger.info(f"Attempt {attempts}: Detected Captcha type: {captcha_type}")
-                    return True  # No captcha => success
 
-                logger.info(f"Detected CAPTCHA type: {captcha_type}")
-                captcha_data = tester.get_captcha_data(captcha_type, self.stealth_chrome)
-                solution = tester.solve_captcha(
-                    captcha_type,
-                    captcha_data,
-                    self.stealth_chrome,
-                    self.stealth_chrome.current_url
-                )
-
-                if captcha_type == "geetest":
-                    extra_data = captcha_data.get("data")
-                    tester.inject_solution(captcha_type, self.stealth_chrome, solution, extra_data)
-                else:
-                    tester.inject_solution(captcha_type, self.stealth_chrome, solution)
-
-                StealthBrowser.random_wait(3,6)
-
-            except Exception as e:
-                logger.error(f"Error while solving CAPTCHA: {e}", exc_info=True)
-                #self.stealth_chrome.refresh()
-
-        logger.error("All attempts to solve CAPTCHA failed.")
-        return False
 
