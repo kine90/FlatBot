@@ -220,6 +220,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                 if offer_title != "Unknown":
                     logger.info("Found Offer title, scriping the rest.")
                     logger.info(f"Scrape time: {datetime.utcnow()}")
+                    Expose.title = offer_title
                     Expose.location = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "zip-region-and-country")
                     Expose.agent_name = self.stealth_chrome.safe_find_element(By.CLASS_NAME, "truncateChild_5TDve")
                     Expose.real_estate_agency = self.stealth_chrome.safe_find_element(By.CSS_SELECTOR, "p[data-qa='company-name']")
