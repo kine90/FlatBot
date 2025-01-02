@@ -46,33 +46,28 @@ class BaseExposeProcessor:
         raise NotImplementedError
 
     #Returns updated Expose object
-    def process_expose(self, Expose):
+    def process_expose(self, Expose: Expose):
         logger.info(f"Processing expose: {Expose.expose_id}")
+        offer_link = self._generate_expose_link(Expose)
         max_attempts = 4
         for attempt in range(1, max_attempts + 1):
-            logger.info(f"Attempt {attempt}...")
-            offer_link = self._generate_expose_link(Expose)
-            #self.stealth_chrome.get("about:blank")
-            #self.stealth_chrome.load_cookies(self.name)
+            logger.info(f"Attempt {attempt}...")     
             self.stealth_chrome.get(offer_link)
             # Explicit wait for the title to not be empty
             WebDriverWait(self.stealth_chrome, 10).until(
                 lambda d: d.title.strip() != ""
             )
-            #StealthBrowser.random_wait()
-            #self.stealth_chrome.random_scroll()
-            #StealthBrowser.random_wait()
+            self._handle_page(Expose)
 
-            Expose, success = self._handle_page(Expose)
             if Expose.processed == True:
                 logger.warning(f"Attempt {attempt} succeeded!")
-                return Expose, True
+                return
             else:
                 logger.info(f"Attempt {attempt} failed.")
             if attempt < max_attempts:
                 logger.info("Retrying...\n")
-                StealthBrowser.random_wait(5,20)
+                StealthBrowser.random_wait(15,20)
             else:
                 logger.warning(f"All attempts failed.")
                 Expose.failures += 1
-                return Expose, False
+                return

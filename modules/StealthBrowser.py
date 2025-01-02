@@ -20,8 +20,6 @@ from selenium_stealth import stealth
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
-CHROME_PROFILE_PATH = r'C:\Users\flatmaster\AppData\Local\Google\Chrome\User Data'
-
 
 class StealthBrowser(webdriver.Chrome):
     def __init__(self):
@@ -35,7 +33,7 @@ class StealthBrowser(webdriver.Chrome):
 
         options = Options()
         # Set the custom Chrome binary location
-        options.binary_location = r"Chrome installers\chrome-win64\chrome-win64\chrome.exe"
+        #options.binary_location = r"Chrome installers\chrome-win64\chrome-win64\chrome.exe"
 
         # Add your options
         options.add_argument("--disable-blink-features=AutomationControlled")
@@ -49,18 +47,15 @@ class StealthBrowser(webdriver.Chrome):
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-extensions")
         options.add_argument("--remote-debugging-port=9222")
-        options.add_argument(r"--user-data-dir=C:\Users\flatmaster\AppData\Local\Google\Chrome for Testing\User Data\Default")
 
-        # Enable performance logging
-        #capabilities = DesiredCapabilities.CHROME
-        #capabilities["goog:loggingPrefs"] = {"performance": "ALL"}
-        # Combine options with capabilities
-        #options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+        options.add_argument(r"--user-data-dir=C:\Users\flatmaster\AppData\Local\Google\Chrome\User Data\Default")
+        #options.add_argument(r"--user-data-dir=C:\Users\flatmaster\AppData\Local\Google\Chrome for Testing\User Data\Default")
+
         options.add_argument(
             "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
         )
-
+        
         # Use ChromeDriverManager to install and set up the driver service
         driver_service = Service(ChromeDriverManager().install())
 
@@ -75,6 +70,7 @@ class StealthBrowser(webdriver.Chrome):
             renderer="Intel Iris OpenGL Engine",
             fix_hairline=True,
             )
+        self.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
         
         self.maximize_window()
