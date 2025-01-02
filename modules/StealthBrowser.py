@@ -70,6 +70,7 @@ class StealthBrowser(webdriver.Chrome):
             renderer="Intel Iris OpenGL Engine",
             fix_hairline=True,
             )
+        self.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
         
         self.maximize_window()

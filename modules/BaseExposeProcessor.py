@@ -66,7 +66,7 @@ class BaseExposeProcessor:
                 logger.info(f"Attempt {attempt} failed.")
             if attempt < max_attempts:
                 logger.info("Retrying...\n")
-                StealthBrowser.random_wait(5,20)
+                StealthBrowser.random_wait(15,20)
             else:
                 logger.warning(f"All attempts failed.")
                 Expose.failures += 1
