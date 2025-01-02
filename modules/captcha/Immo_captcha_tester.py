@@ -107,14 +107,14 @@ class ImmoCaptchaTester:
         """
         try:
             if captcha_type == "geetest":
-                return self.captcha_solver.solve_geetest(
+                return self.captcha_solver.__get_geetest_solution(
                     data["geetest"], 
                     data["challenge"], 
                     page_url
                 )
 
             elif captcha_type == "recaptcha":
-                return self.captcha_solver.solve_recaptcha(
+                return self.captcha_solver.__get_recaptcha_solution(
                     data["sitekey"], 
                     page_url
                 )
@@ -167,7 +167,7 @@ class ImmoCaptchaTester:
             base64_screenshot = base64.b64encode(screenshot_bytes.getvalue()).decode('utf-8')
 
             # Solve via your Amazon solver (which returns coords)
-            result = self.captcha_solver.solve_amazon(base64_screenshot)
+            result = self.captcha_solver.__get_awswaf_solution(base64_screenshot)
 
             # We'll do the clicks right here
             logger.info(result['code'])
@@ -233,47 +233,3 @@ class ImmoCaptchaTester:
                     solution.get("code", "")
                 )
             )
-
-    def validate_solution(self, captcha_type, driver):
-        try:
-            driver.find_element(By.TAG_NAME, "awswaf-captcha")
-            return False
-        except:
-            logger.info("Captcha solved")
-            return True
-        
-'''
-    def solve_captcha_on_page(self, driver) -> bool:
-        """
-        Detects and solves the captcha on the current page.
-        Returns True if solved (or if no captcha), False otherwise.
-        """
-        try:
-            captcha_type = self.detect_captcha(driver)
-            if not captcha_type:
-                logger.info("No CAPTCHA detected.")
-                return True  # No captcha => success
-
-            logger.info(f"Detected CAPTCHA type: {captcha_type}")
-            captcha_data = self.get_captcha_data(captcha_type, driver)
-            solution = self.solve_captcha(
-                captcha_type,
-                captcha_data,
-                driver,
-                driver.current_url
-            )
-
-            if captcha_type == "geetest":
-                extra_data = captcha_data.get("data")
-                self.inject_solution(captcha_type, driver, solution, extra_data)
-            else:
-                self.inject_solution(captcha_type, driver, solution)
-        except Exception as e:
-            logger.error(f"Error while solving CAPTCHA: {e}", exc_info=True)
-            return False
-        if self.validate_solution(captcha_type, driver):
-            logger.info("CAPTCHA solved successfully.")
-            return True
-        else:
-            return False
-'''

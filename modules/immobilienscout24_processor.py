@@ -303,16 +303,16 @@ class Immobilienscout24_processor(BaseExposeProcessor):
             return False
 
         # Validating submission
-        confirmation_message = WebDriverWait(self.stealth_chrome, 10).until(
+        try:
+            confirmation_message = WebDriverWait(self.stealth_chrome, 10).until(
             EC.presence_of_element_located((By.XPATH, "//h2[text()='Nachricht gesendet']"))
-        )
-        if confirmation_message:
+            )
             logger.info(f"Expose {Expose.expose_id} applied succesfully.")
             Expose.applied_at = datetime.utcnow()
             Expose.processed = True
             # TO-DO Notify user?
             return True
-        else:
+        except:
             logger.warning("Could not validate application submission.")
             return False
 
@@ -478,12 +478,11 @@ class Immobilienscout24_processor(BaseExposeProcessor):
         while attempts < max_attempts:
             attempts += 1
             try:
-                logger.debug("Loading solver")
                 tester = ImmoCaptchaTester()
                 captcha_type = tester.detect_captcha(self.stealth_chrome)
                 
                 if not captcha_type:
-                    logger.info("No CAPTCHA detected.")
+                    logger.info(f"Attempt {attempts}: Detected Captcha type: {captcha_type}")
                     return True  # No captcha => success
 
                 logger.info(f"Detected CAPTCHA type: {captcha_type}")
@@ -501,13 +500,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                 else:
                     tester.inject_solution(captcha_type, self.stealth_chrome, solution)
 
-                StealthBrowser.random_wait()
-                if not tester.detect_captcha(self.stealth_chrome):
-                    logger.info("CAPTCHA solved successfully.")
-                    return True
-                else:
-                    logger.error("Failed to solve CAPTCHA, retrying...")
-                    #self.stealth_chrome.refresh()
+                StealthBrowser.random_wait(3,6)
 
             except Exception as e:
                 logger.error(f"Error while solving CAPTCHA: {e}", exc_info=True)

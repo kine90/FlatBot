@@ -1,5 +1,6 @@
 """Captcha solver for 2Captcha Captcha Solving Service (https://2captcha.com)"""
 import json
+from dataclasses import dataclass
 from typing import Dict
 from time import sleep
 import logging
@@ -15,10 +16,40 @@ from modules.captcha.captcha_solver import (
     RecaptchaResponse,
 )
 
-class TwoCaptchaSolver(CaptchaSolver):
+logger = logging.getLogger(__name__)
+
+@dataclass
+class GeetestResponse:
+    """Responde from GeeTest Captcha"""
+    challenge: str
+    validate: str
+    sec_code: str
+
+@dataclass
+class RecaptchaResponse:
+    """Response from reCAPTCHA"""
+    result: str
+
+class CaptchaUnsolvableError(Exception):
+    """Raised when Captcha was unsolveable"""
+    def __init__(self):
+        super().__init__()
+        self.message = "Failed to solve captcha."
+
+class CaptchaBalanceEmpty(Exception):
+    """Raised when Captcha account is out of credit"""
+    def __init__(self):
+        super().__init__()
+        self.message = "Captcha account balance empty."
+
+
+class TwoCaptchaSolver():
     """Implementation of Captcha solver for 2Captcha"""
 
-    def solve_geetest(self, geetest: str, challenge: str, page_url: str) -> GeetestResponse:
+    def __init__(self, api_key):
+        self.api_key = api_key
+
+    def __get_geetest_solution(self, geetest: str, challenge: str, page_url: str) -> GeetestResponse:
         """Solves GeeTest Captcha"""
         logging.info("Trying to solve geetest.")
         params = {
@@ -36,7 +67,7 @@ class TwoCaptchaSolver(CaptchaSolver):
                                untyped_result["geetest_seccode"])
 
 
-    def solve_recaptcha(self, google_site_key: str, page_url: str) -> RecaptchaResponse:
+    def __get_recaptcha_solution(self, google_site_key: str, page_url: str) -> RecaptchaResponse:
         logging.info("Trying to solve recaptcha.")
         params = {
             "key": self.api_key,
@@ -47,10 +78,10 @@ class TwoCaptchaSolver(CaptchaSolver):
         captcha_id = self.__submit_2captcha_request(params)
         return RecaptchaResponse(self.__retrieve_2captcha_result(captcha_id))
 
-    def solve_amazon(self, image):
+    def __get_awswaf_solution(self, image):
         logging.info("Trying to solve amazon.")
-        solver = TwoCaptcha(self.api_key, defaultTimeout=40, pollingInterval=5)
-        result = solver.coordinates(image, lang='en') #
+        solver = TwoCaptcha(self.api_key, defaultTimeout=50, pollingInterval=5)
+        result = solver.coordinates(image, lang='en')
         return result
 
     @backoff.on_exception(**CaptchaSolver.backoff_options)
@@ -87,7 +118,7 @@ class TwoCaptchaSolver(CaptchaSolver):
                 raise CaptchaUnsolvableError()
 
             if "ERROR_ZERO_BALANCE" in retrieve_response.text:
-                logging.info("2captcha account out of credit - buy more captchas.")
+                logging.error("2captcha account out of credit - buy more captchas.")
                 raise CaptchaBalanceEmpty()
 
             if not retrieve_response.text.startswith("OK"):
