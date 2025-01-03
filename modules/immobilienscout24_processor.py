@@ -186,7 +186,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                     login_button.click()
                     logger.info("Login submitted successfully.")
 
-                    StealthBrowser.random_wait(5,10)
+                    StealthBrowser.random_wait(3,5)
                     ## TO-DO validate success
                     return True
                 except Exception as e:
@@ -194,7 +194,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                     # TO-DO Notify user
                     return False                           
         except Exception:
-            logger.info("Login button not found.", e)
+            logger.info("Login button not found.")
             #self.stealth_chrome_helpers.wait_for_user()
             # TO-DO Notify user
             return False
@@ -411,7 +411,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                     try:
                         # Scroll this element into view before interacting
                         self.stealth_chrome.execute_script("arguments[0].scrollIntoView({block: 'center'});", field)
-                        StealthBrowser.random_wait(0.5, 1)  # give time to settle
+                        StealthBrowser.random_wait(0.2, 0.5)  # give time to settle
                         self.stealth_chrome.random_mouse_movements(field)
 
                         if field_type in ["text", "email", "tel", "number"] or field.tag_name.lower() == "textarea":
@@ -441,7 +441,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
         last_height = self.stealth_chrome.execute_script("return document.body.scrollHeight")
         while True:
             self.stealth_chrome.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            StealthBrowser.random_wait(2, 4)  # Adjust wait as needed
+            StealthBrowser.random_wait(0.3, 0.7)  # Adjust wait as needed
             new_height = self.stealth_chrome.execute_script("return document.body.scrollHeight")
             if new_height == last_height:
                 break

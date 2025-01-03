@@ -84,7 +84,7 @@ class StealthBrowser(webdriver.Chrome):
         input("Waiting for user, press Enter to continue...")
 
     @staticmethod
-    def random_wait(min_seconds=2, max_seconds=5):
+    def random_wait(min_seconds=0.5, max_seconds=3):
         wait_time = random.uniform(min_seconds, max_seconds)
         logging.info(f"Waiting for {wait_time:.2f} seconds...")
         time.sleep(wait_time)
@@ -113,7 +113,7 @@ class StealthBrowser(webdriver.Chrome):
     def perform_random_action(self):
         actions = [
             self.random_scroll,
-            lambda: self.random_wait(2, 8),
+            lambda: self.random_wait(1, 3),
         ]
         action = random.choice(actions)
         action()
@@ -174,7 +174,7 @@ class StealthBrowser(webdriver.Chrome):
         except Exception as e:
             logging.error(f"Error while scrolling to bottom: {e}")
 
-    def send_keys_human_like(self, field, value, min_delay=0.1, max_delay=0.3):
+    def send_keys_human_like(self, field, value, min_delay=0.01, max_delay=0.25):
         for char in value:
             field.send_keys(char)
             time.sleep(random.uniform(min_delay, max_delay))

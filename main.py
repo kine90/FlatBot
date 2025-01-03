@@ -68,7 +68,7 @@ def main():
             stealth_chrome.kill()
         else:
             logger.warning("No unprocessed exposes found.")
-        StealthBrowser.random_wait(100, 300)
+        StealthBrowser.random_wait(60, 120)
 
 ############################################################
 if __name__ == "__main__":
