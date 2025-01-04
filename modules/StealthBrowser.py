@@ -178,3 +178,27 @@ class StealthBrowser(webdriver.Chrome):
         for char in value:
             field.send_keys(char)
             time.sleep(random.uniform(min_delay, max_delay))
+
+    def click_with_random_offset(self, element):
+        """
+        Clicks on the given element at a random offset between 15% and 50%
+        of its width and height.
+        """
+        # Get element size
+        width = element.size['width']
+        height = element.size['height']
+
+        # Calculate random offsets
+        offset_x = random.uniform(width * 0.15, width * 0.50)
+        offset_y = random.uniform(height * 0.15, height * 0.50)
+
+        # Log the offsets
+        logging.debug(f"Clicking with random offset ({offset_x:.2f}, {offset_y:.2f}) "
+                     f"for element with size ({width}, {height})")
+
+        # Move to element and click at the offset
+        actions = ActionChains(self)
+        actions.move_to_element_with_offset(element, offset_x, offset_y).click().perform()
+
+        # You can add an optional small random wait after the click
+        self.random_wait(0.1, 0.5)

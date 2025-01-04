@@ -225,7 +225,7 @@ class ImmoCaptchaHandler:
         driver.switch_to.frame(driver.find_element_by_tag_name("iframe"))
         recaptcha_checkbox = driver.find_element_by_class_name(
             "recaptcha-checkbox-checkmark")
-        recaptcha_checkbox.click()
+        driver.click_with_random_offset(recaptcha_checkbox)
         self._wait_for_captcha_resolution(driver, checkbox)
         driver.switch_to.default_content()
 

@@ -126,7 +126,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
             login_link = self.stealth_chrome.find_element(By.CLASS_NAME, "topnavigation__sso-login__middle")
             if login_link and "Anmelden" in login_link.text:
                 logger.info("User not logged in. Attempting login.")
-                login_link.click()
+                self.stealth_chrome.click_with_random_offset(login_link)
                 StealthBrowser.random_wait()
 
                 # sometimes we get a captcha
@@ -145,7 +145,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                     )
                     self.stealth_chrome.random_mouse_movements(submit_button)
                     #self.stealth_chrome.dismiss_overlays()
-                    submit_button.click()
+                    self.stealth_chrome.click_with_random_offset(submit_button)
                     logger.info("Email submission successful, waiting for password field.")
 
                     StealthBrowser.random_wait()
@@ -173,7 +173,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                     # Check if the checkbox is already selected
                     if not checkbox_input.is_selected():
                         # If not selected, click the label (or checkbox_input) to select it
-                        remember_me_label.click()
+                        self.stealth_chrome.click_with_random_offset(remember_me_label)
                         logger.info("'Remember Me' checkbox was not selected. Selecting it now.")
                     else:
                         logger.debug("'Remember Me' checkbox is already selected. No action taken.")
@@ -183,7 +183,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                     )
                     self.stealth_chrome.random_mouse_movements(login_button)
                     self.stealth_chrome.dismiss_overlays()
-                    login_button.click()
+                    self.stealth_chrome.click_with_random_offset(login_button)
                     logger.info("Login submitted successfully.")
 
                     StealthBrowser.random_wait(3,5)
@@ -254,7 +254,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                 EC.presence_of_element_located((By.CLASS_NAME, "Button_button-primary__6QTnx"))
             )
             self.stealth_chrome.dismiss_overlays()
-            message_button.click()
+            self.stealth_chrome.click_with_random_offset(message_button)
             logger.info("Message button found and clicked successfully.")
         except Exception as e:
             logger.info("Failed to find or click message button.")
@@ -297,7 +297,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
             )
             self.stealth_chrome.execute_script("arguments[0].scrollIntoView(true);", send_button)
             self.stealth_chrome.dismiss_overlays()
-            send_button.click()
+            self.stealth_chrome.click_with_random_offset(send_button)
             logger.info("Submit clicked, waiting for confirmation.")
         except:
             logger.info("Submit not fount!")
@@ -424,9 +424,9 @@ class Immobilienscout24_processor(BaseExposeProcessor):
                         elif field_type == "checkbox":
                             current_state = field.is_selected()
                             if value.lower() in ["true", "yes", "1"] and not current_state:
-                                field.click()
+                                self.stealth_chrome.click_with_random_offset(field)
                             elif value.lower() in ["false", "no", "0"] and current_state:
-                                field.click()
+                                self.stealth_chrome.click_with_random_offset(field)
 
                     except Exception as e:
                         logger.warning(f"Could not fill field '{field_name}' (type={field_type}). log debug for more details.")
@@ -469,7 +469,7 @@ class Immobilienscout24_processor(BaseExposeProcessor):
             shadow_root = self.stealth_chrome.find_element(By.CSS_SELECTOR, "#usercentrics-root").shadow_root
             button = shadow_root.find_element(By.CSS_SELECTOR, "button[data-testid='uc-accept-all-button']")
             self.stealth_chrome.random_mouse_movements(button)
-            button.click()
+            self.stealth_chrome.click_with_random_offset(button)
             logging.info("Successfully clicked the 'Accept All' button.")
         except:
             logging.debug("Failed to click the 'Accept All' button")
