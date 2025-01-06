@@ -1,13 +1,14 @@
 Sehr geehrte(r) {Landlord_Name},
 
-mein Name ist {APPLICANT_NAME} {APPLICANT_SURNAME}, ich bin {APPLICANT_AGE} Jahre alt, und ich interessiere mich sehr für die Wohnung in {Flat_Address}.
+mein Name ist {APPLICANT_NAME} {APPLICANT_SURNAME}, ich bin {APPLICANT_AGE} Jahre alt und interessiere mich sehr für die Wohnung in {Flat_Address}.
 
-Ich arbeite als {APPLICANT_JOB} bei {APPLICANT_COMPANY} in {APPLICANT_CITY} und habe ein stabiles monatliches Nettoeinkommen von {APPLICANT_NET_INCOME_M}.
-Die Lage der Wohnung gefällt mir sehr und ich glaube, dass sie ein perfektes Zuhause für mich wäre. Ich bin {APPLICANT_JOB_STATUS} und führe einen ruhigen und verantwortungsvollen Lebensstil. Ich kümmere mich gut um die Wohnung und respektiere meine Nachbarn.
+Ich arbeite als {APPLICANT_JOB} bei {APPLICANT_COMPANY} in {APPLICANT_CITY} und bin {APPLICANT_JOB_STATUS}. Mein monatliches Nettoeinkommen liegt bei {APPLICANT_NET_INCOME_M}, wodurch ich die Miete zuverlässig decken kann. Da ich langfristig in {APPLICANT_CITY} bleiben möchte, suche ich ein dauerhaftes Zuhause und bin an einer langfristigen Mietdauer interessiert.
 
-Gerne stelle ich Ihnen alle erforderlichen Unterlagen, einschließlich Einkommensnachweisen und einer SCHUFA-Auskunft, zur Verfügung. Bitte lassen Sie mich wissen, ob Sie weitere Informationen für den Bewerbungsprozess benötigen.
+Seit meinen Zwanzigern lebe ich bereits allein, weshalb ich einen verantwortungsvollen Umgang mit Wohnraum gewohnt bin. Aktuell wohne ich ebenfalls allein (Einpersonenhaushalt) und besitze keine Haustiere. Auf Wunsch kann ich Ihnen gerne gute Referenzen meiner bisherigen Vermieter vorlegen. Zudem habe ich alle wichtigen Unterlagen (Einkommensnachweise, SCHUFA-Auskunft und Mietschuldenfreiheitsbescheinigung) vorbereitet und stelle sie Ihnen bei Bedarf gerne zur Verfügung.
 
-Vielen Dank für Ihre Zeit und Ihre Berücksichtigung meiner Bewerbung. Ich freue mich auf Ihre Rückmeldung und die Möglichkeit, die Wohnung zu besichtigen.
+Über eine Besichtigung der Wohnung würde ich mich sehr freuen. Bitte lassen Sie mich wissen, ob Sie noch weitere Informationen für den Bewerbungsprozess benötigen.
+
+Vielen Dank für Ihre Zeit und die Prüfung meiner Bewerbung. Ich freue mich darauf, von Ihnen zu hören.
 
 Mit freundlichen Grüßen,
 {APPLICANT_NAME} {APPLICANT_SURNAME}
