@@ -7,10 +7,10 @@ MAX_ATTEMPTS_EXPOSE=50
 EMAIL_USER = "your mailbox username"
 EMAIL_PASSWORD = "your mailbox password"
 # Obsolete POP3 settings
-EMAIL_SERVER_POP3 = "pop3s.aruba.it" #pop3 server
+EMAIL_SERVER_POP3 = "pop3s.domain.com" #pop3 server
 EMAIL_PORT_POP3 = 995
 #Current IMAP settings
-EMAIL_SERVER_IMAP = "imaps.aruba.it" #imap server address
+EMAIL_SERVER_IMAP = "imaps.domain.com" #imap server address
 EMAIL_IMAP_PORT = 993
 #Generic settings
 EMAIL_DELETE = False #should the script delete processed emails or leave them in the server?
