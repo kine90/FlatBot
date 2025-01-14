@@ -22,19 +22,18 @@ FlatBot follows this workflow every 1–2 minutes:
    - Scrapes details from the listing, logs in if necessary, and applies using a customized template that addresses the real estate agent directly.  
    - Saves timestamps of each operation and offer details to the database for review.  
 
-## Requisites
+### Requisites
 
 To run FlatBot, you’ll need:  
 - **A computer** that you can ideally leave running 24/7. FlatBot was developed on Windows, but with a few tweaks, it should run on macOS and Linux too.
 - **A mailbox** to receive email alerts, accessible by FlatBot via IMAP (POP3 can also work with minor code changes). It's best to set up a dedicated mailbox for your flat search.  
+- **Immoscout mail alerts** Create one or more search fileters and enable the immediate notifiaction of new offers.
 - A properly set up **Chrome Browser** and **Chromedriver**.  
 - **A 2Captcha subscription**. A €2–3 balance should last at least a month.  
 - *(Optional but recommended)* **DB Browser for SQLite**, which lets you review the data processed by FlatBot.  
 - *(Optional but highly recommended)* **ImmoScout24 Premium subscription** for faster and more comprehensive access to offers.  
 
-## Installation
-
-### Setup
+### Installation
 
 1. **Clone the Repository:**
    ```bash
@@ -70,7 +69,7 @@ To run FlatBot, you’ll need:
    ```bash
    python main.py
    ```
-   FlatBot will monitor your mailbox every 1–2 minutes and automatically apply to new flat listings.
+   FlatBot will start applying for you.
 
 ## Thanks
 
