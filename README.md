@@ -25,8 +25,8 @@ FlatBot follows this workflow every 1–2 minutes:
 ## Requisites
 
 To run FlatBot, you’ll need:  
-- **A computer** that you can ideally leave running 24/7. FlatBot was developed on Windows, but with a few tweaks, it should run on macOS and Linux too (more on this later).  
-- **A mailbox** to receive email alerts, accessible by FlatBot via IMAP (POP3 can also work with minor changes—details later). It's best to set up a dedicated mailbox for your flat search.  
+- **A computer** that you can ideally leave running 24/7. FlatBot was developed on Windows, but with a few tweaks, it should run on macOS and Linux too.
+- **A mailbox** to receive email alerts, accessible by FlatBot via IMAP (POP3 can also work with minor code changes). It's best to set up a dedicated mailbox for your flat search.  
 - A properly set up **Chrome Browser** and **Chromedriver**.  
 - **A 2Captcha subscription**. A €2–3 balance should last at least a month.  
 - *(Optional but recommended)* **DB Browser for SQLite**, which lets you review the data processed by FlatBot.  
