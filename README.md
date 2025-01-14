@@ -8,6 +8,20 @@ FlatBot leverages ImmoScout24's instant email notifications to streamline your f
 
 This is a personal project, built out of necessity, to make my Berlin flat search a little less frustrating and time-consuming. FlatBot fills a gap that, as of 2025, ImmoScout24 has yet to address—even for premium subscribers. Here's hoping they'll catch up soon!
 
+### What it does
+
+FlatBot follows this workflow every 1–2 minutes:
+
+1. **EmailFetcher**:  
+   - Scans unread emails in the mailbox.  
+   - If the subject matches a flat offering, it extracts the expose link and stores it as a new offer in the database.  
+
+2. **ImmoScout24 Processor**:  
+   - Retrieves new offerings from the database.  
+   - Opens a Chrome session and navigates to the expose link.  
+   - Scrapes details from the listing, logs in if necessary, and applies using a customized template that addresses the real estate agent directly.  
+   - Saves timestamps of each operation and offer details to the database for review.  
+
 ## Requisites
 
 To run FlatBot, you’ll need:  
@@ -57,22 +71,6 @@ To run FlatBot, you’ll need:
    python main.py
    ```
    FlatBot will monitor your mailbox every 1–2 minutes and automatically apply to new flat listings.
-
-## Architecture
-
-### Workflow
-
-FlatBot follows this workflow every 1–2 minutes:
-
-1. **EmailFetcher**:  
-   - Scans unread emails in the mailbox.  
-   - If the subject matches a flat offering, it extracts the expose link and stores it as a new offer in the database.  
-
-2. **ImmoScout24 Processor**:  
-   - Retrieves new offerings from the database.  
-   - Opens a Chrome session and navigates to the expose link.  
-   - Scrapes details from the listing, logs in if necessary, and applies using a customized template that addresses the real estate agent directly.  
-   - Saves timestamps of each operation and offer details to the database for review.  
 
 ## Thanks
 
