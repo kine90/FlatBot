@@ -47,9 +47,9 @@ class StealthBrowser(webdriver.Chrome):
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-extensions")
         options.add_argument("--remote-debugging-port=9222")
-
+    	
+        #you can find your user folder opening chrome and navigating to chrome://version
         options.add_argument(r"--user-data-dir=C:\Users\flatmaster\AppData\Local\Google\Chrome\User Data\Default")
-        #options.add_argument(r"--user-data-dir=C:\Users\flatmaster\AppData\Local\Google\Chrome for Testing\User Data\Default")
 
         options.add_argument(
             "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
